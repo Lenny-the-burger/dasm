@@ -9,17 +9,17 @@ const tabContents = {
     'graph.desmo': `// Desmo Language Example
 $color: blue; $line: dashed;
 $thickness: 1;
-f(x) = 0.5x + sin(x);
+any function(x) = 0.5x + sin(x);
 
-f(x){a <= x <= b};
+function(x){a <= x <= b};
 
-uniform n = 1 <0, 10, 0>;
+uniform uint n = 1 <0, 10, 0>;
 $drag: all;
-uniform p = (0,0);
+uniform vec2 p = (0,0);
 
-P(L);
+draw(L);
 
-g(x) = (x + a) /
+any g(x) = (x + a) /
     (a + b^2);
 
 #private helper functions {
@@ -27,13 +27,14 @@ g(x) = (x + a) /
     (a, 0);
     (b, 0);
 
-    uniform a = 1;
-    uniform b = 1;
+    uniform float a = 1;
+    uniform float b = 1;
 
-    w = (b-a)/n;
-    L = [a,a+w,...,b-w];
-    public L(x) = polygon((x,0), (x,f(x)), (x+w,f(x)), (x+w,0));
-}`,
+    float w = (b-a)/n;
+    float[] L = [a,a+w,...,b-w];
+    public any draw(x) = polygon((x,0), (x,function(x)), (x+w,function(x)), (x+w,0));
+}
+`,
     'graph.dasm': `; Assembly-like intermediate representation
 ; Input parameters: A, B
 
@@ -157,6 +158,12 @@ function registerDesmoLanguage() {
                 // Keywords
                 [/\b(uniform|public|private)\b/, 'keyword'],
 
+                // Array types (type followed by [])
+                [/\b(float|int|vec2|vec3|ivec2|ivec3|uint|uvec2|uvec3|any)\[\]/, 'type.array'],
+
+                // Types
+                [/\b(float|int|vec2|vec3|ivec2|ivec3|uint|uvec2|uvec3|any)\b/, 'type'],
+
                 // Folder declarations with names
                 [/#\s*private\s+/, 'keyword.folder', '@foldername'],
                 [/#\s*/, 'keyword.folder', '@foldername'],
@@ -171,7 +178,7 @@ function registerDesmoLanguage() {
                 [/[a-zA-Z_]\w*(?=\s*\()/, 'function'],
 
                 // Numbers (including decimals)
-                [/\b\d+\.?\d*\b/, 'number'],
+                [/\b\d+\.?\d*/, 'number'],
 
                 // Operators and comparison
                 [/[+\-*/^]/, 'operator'],
@@ -179,7 +186,7 @@ function registerDesmoLanguage() {
                 [/\.\.\./, 'operator.spread'],
 
                 // Delimiters
-                [/[{}()\[\]]/, '@brackets'],
+                [/[{}()\[\]]/, 'delimiter.bracket'],
                 [/[,;:]/, 'delimiter'],
 
                 // Variables and identifiers
@@ -205,20 +212,25 @@ function registerDesmoLanguage() {
         inherit: true,
         rules: [
             { token: 'keyword', foreground: 'C586C0' },
-            { token: 'keyword.folder', foreground: '569CD6' },
+            { token: 'type', foreground: '569CD6' },
+            { token: 'type.array', foreground: '569CD6' },
+            { token: 'keyword.folder', foreground: 'D4A959' },
             { token: 'string.folder', foreground: 'CE9178' },
             { token: 'formatting', foreground: '#8a8a8a' },
             { token: 'function', foreground: 'DCDCAA' },
-            { token: 'function.builtin', foreground: '4EC9B0' },
-            { token: 'variable', foreground: '9CDCFE' },
+            { token: 'function.builtin', foreground: 'DCDCAA' },
+            { token: 'variable', foreground: '9cdcfe' },
             { token: 'number', foreground: 'B5CEA8' },
-            { token: 'operator', foreground: 'D4D4D4' },
-            { token: 'operator.comparison', foreground: 'D4D4D4' },
-            { token: 'operator.spread', foreground: 'D4D4D4' },
-            { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },
+            { token: 'operator', foreground: 'B4B4B4' },
+            { token: 'operator.comparison', foreground: 'B4B4B4' },
+            { token: 'operator.spread', foreground: 'B4B4B4' },
+            { token: 'delimiter.bracket', foreground: '#cfcfcf' },
+            { token: 'delimiter', foreground: 'B4B4B4' },
+            { token: 'comment', foreground: '57A64A', fontStyle: 'italic' },
         ],
         colors: {
             'editor.background': '#1e1e1e',
+            'editor.foreground': '#dcdcdc',
         }
     });
 
@@ -533,9 +545,7 @@ function initializeEditor() {
                 comments: false,
                 strings: false
             },
-            bracketPairColorization: {
-                enabled: true
-            }
+            "bracketPairColorization.enabled": false
         });
     });
 }
