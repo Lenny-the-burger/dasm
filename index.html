@@ -131,17 +131,48 @@
             flex: 1;
             min-width: 200px;
             background: #252526;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
+            position: relative;
         }
 
         canvas {
             background: #1e1e1e;
-            border: 1px solid #3e3e42;
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: grab;
+        }
+
+        canvas:active {
+            cursor: grabbing;
+        }
+
+        .canvas-controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .canvas-button {
+            background: #3e3e42;
+            border: none;
+            color: #cccccc;
+            padding: 8px 12px;
+            border-radius: 3px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .canvas-button:hover {
+            background: #505050;
         }
     </style>
 </head>
@@ -168,7 +199,10 @@
         <div class="separator" id="separator"></div>
 
         <div class="canvas-panel">
-            <canvas id="canvas" width="600" height="400"></canvas>
+            <div class="canvas-controls">
+                <button class="canvas-button" id="homeButton" title="Reset View">⌂</button>
+            </div>
+            <canvas id="canvas"></canvas>
         </div>
     </div>
 
@@ -178,59 +212,11 @@
     <!-- Editor Configuration -->
     <script src="editor.js"></script>
 
-    <!-- Canvas Drawing and UI Interactions -->
+    <!-- Canvas Configuration -->
+    <script src="canvas.js"></script>
+
+    <!-- UI Interactions -->
     <script>
-        // Draw initial shapes on canvas
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-
-        function drawShapes() {
-            // Clear canvas
-            ctx.fillStyle = '#1e1e1e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Rectangle
-            ctx.fillStyle = '#21a343';
-            ctx.fillRect(50, 50, 100, 100);
-
-            // Circle
-            ctx.fillStyle = '#3794ff';
-            ctx.beginPath();
-            ctx.arc(300, 100, 50, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Triangle
-            ctx.fillStyle = '#ff6b6b';
-            ctx.beginPath();
-            ctx.moveTo(450, 150);
-            ctx.lineTo(500, 50);
-            ctx.lineTo(550, 150);
-            ctx.closePath();
-            ctx.fill();
-
-            // Line
-            ctx.strokeStyle = '#ffd93d';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(50, 250);
-            ctx.lineTo(550, 250);
-            ctx.stroke();
-
-            // Polygon
-            ctx.fillStyle = '#a78bfa';
-            ctx.beginPath();
-            ctx.moveTo(150, 300);
-            ctx.lineTo(180, 250);
-            ctx.lineTo(220, 270);
-            ctx.lineTo(210, 320);
-            ctx.lineTo(170, 330);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        // Initialize canvas
-        drawShapes();
-
         // Draggable separator
         const separator = document.getElementById('separator');
         const editorPanel = document.querySelector('.editor-panel');
@@ -268,6 +254,7 @@
                 isDragging = false;
                 separator.classList.remove('dragging');
                 document.body.style.cursor = 'default';
+                resizeCanvas(); // Resize canvas after separator drag
             }
         });
     </script>
