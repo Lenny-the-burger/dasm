@@ -1,0 +1,57 @@
+// example this:
+
+any f(x) = x^2 + 2*x + 1
+vec2[] points = [(1,2), (3,4), (5,6)]
+polygon(f(points) + 1)
+
+// would be compiled to:
+
+; FUNCTIONS
+
+// inputs and outputs. Even though this is declared as "any", this acts basically like c++ templates.
+// if this were also called on a number at some point there would be a separate FUNC0_NUM version of this function generated (and this one would be FUNC0_VVEC2)
+FUNC0: ; f
+	IN0: VVEC2
+	OUT0: VVEC2
+
+FUNC0_ALLOC:
+	ALLOC0: VVEC2
+
+FUNC0_BEGIN:
+	VS_POW IN0 2: OUT_0
+	VS_MUL IN0 2: ALLOC_0
+	VV_ADD OUT0 ALLOC0: OUT0
+	VS_ADD OUT0 1: OUT0
+	RET
+
+; PREALLOC
+points: STATIC VVEC2 3 // the actual array of vec2s. this is static because the values are known at compile time
+
+// func#_type_call#
+FUNC0_RET_0: VVEC2 3 // the space to write the return values of FUNC0 when called on points
+FUNC0_ALLOC0_0: VVEC2 3 // func0 requests an allocation for its internal use
+
+// output buffer, this is only written to, and rendered from by js outside of wasm.
+// sometimes this will need to be another actual allocation, but a lot you can just reuse the return buffer of the last function call since
+// polygon() doesnt actually do anything with its input other than read it.
+POLY_BUF0: VVEC2 3
+
+; PROGRAM
+CALL FUNC0 points: FUNC0_RET_0 FUNC0_ALLOC0_0
+VS_ADD FUNC0_RET_0 1: POLY_BUF0
+
+; END
+
+// end of the program
+This assembly is simd first, so it uses an unusual memory model.
+Here, the working memory would be laid out like this:
+[points (static, taken directly from instantiation)][FUNC0_RET_0][FUNC0_ALLOC0_0][POLY_BUF0]
+
+Data is written destructivly, as variables cannot be reassigned, like in functional programming.
+This lets us avoid all runtime allocation. This isnt the most efficient use of memory, but it is designed to be
+parallelizable and fast to compute.
+
+Once the program executes, the POLY_BUF0 memory can be read out to get the final result of the polygon() call and rendered to the canvas.
+
+dasm can be compiled into wasm, and eventually into something like x86 machine code, or gpu shaders via spir-v and cuda.
+There are several instructions, like VS_ADD which is vector-scalar add, and VV_ADD which is vector-vector add.
