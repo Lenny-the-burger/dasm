@@ -1,3 +1,5 @@
+"desmos assembly language"
+
 // example this:
 
 any f(x) = x^2 + 2*x + 1
@@ -12,16 +14,16 @@ polygon(f(points) + 1)
 // if this were also called on a number at some point there would be a separate FUNC0_NUM version of this function generated (and this one would be FUNC0_VVEC2)
 FUNC0: ; f
 	IN0: VVEC2
-	OUT0: VVEC2
+	OUT: VVEC2
 
-FUNC0_ALLOC:
-	ALLOC0: VVEC2
+FUNC0_VARS:
+	VAR0: VVEC2
 
 FUNC0_BEGIN:
-	VS_POW IN0 2: OUT_0
-	VS_MUL IN0 2: ALLOC_0
-	VV_ADD OUT0 ALLOC0: OUT0
-	VS_ADD OUT0 1: OUT0
+	VS_POW IN0 2: OUT
+	VS_MUL IN0 2: VAR0
+	VV_ADD OUT VAR0: OUT
+	VS_ADD OUT 1: OUT
 	RET
 
 ; PREALLOC
@@ -29,15 +31,15 @@ points: STATIC VVEC2 3 // the actual array of vec2s. this is static because the 
 
 // func#_type_call#
 FUNC0_RET_0: VVEC2 3 // the space to write the return values of FUNC0 when called on points
-FUNC0_ALLOC0_0: VVEC2 3 // func0 requests an allocation for its internal use
 
 // output buffer, this is only written to, and rendered from by js outside of wasm.
 // sometimes this will need to be another actual allocation, but a lot you can just reuse the return buffer of the last function call since
 // polygon() doesnt actually do anything with its input other than read it.
 POLY_BUF0: VVEC2 3
 
+// opcode param1 param2: dest
 ; PROGRAM
-CALL FUNC0 points: FUNC0_RET_0 FUNC0_ALLOC0_0
+CALL FUNC0 points: FUNC0_RET_0
 VS_ADD FUNC0_RET_0 1: POLY_BUF0
 
 ; END
@@ -55,3 +57,40 @@ Once the program executes, the POLY_BUF0 memory can be read out to get the final
 
 dasm can be compiled into wasm, and eventually into something like x86 machine code, or gpu shaders via spir-v and cuda.
 There are several instructions, like VS_ADD which is vector-scalar add, and VV_ADD which is vector-vector add.
+
+A more complex .desmo example:
+
+// Desmo Language Example
+any function(x) = 0.5x + sin(x);
+
+uniform uint n = 1 <0, 10, 0>;
+$drag: all;
+uniform vec2 p = (0,0);
+
+draw(L);
+
+any long_func(x) = (x + a) /
+    (a + b^2);
+
+#private helper functions {
+    $color: black;
+    (a, 0);
+    (b, 0);
+
+    uniform float a = 1;
+    uniform float b = 1;
+
+    float w = (b-a)/n;
+    float[] L = [a,a+w,...,b-w];
+    public any draw(x) = polygon((x,0), (x,function(x)), (x+w,function(x)), (x+w,0));
+}
+
+uniforms are variables that can be changed at runtime from the UI, and are essentially treated as static during execution,
+but are updated between frames without needing to recompile the entire program.
+
+Things can be declared as any, this is basically like a mix of templates for functions and the auto keyword in c++.
+The # denotes a "folder", and is mostly just a way to group things together. private and public keywords control visibility of functions and variables.
+In desmos technically everything is globally scoped, but here private folders can be locally scoped, but this would just be essentiually a macro
+that prepends the folder id to everything inside of it to avoid name collisions, still compiled the same way.
+
+$ if for formatting, ignored for assembly.
