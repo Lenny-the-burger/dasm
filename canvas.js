@@ -5,7 +5,7 @@ const ctx = canvas.getContext('2d');
 // Initial/default view state
 const DEFAULT_OFFSET_X = 0;
 const DEFAULT_OFFSET_Y = 0;
-const DEFAULT_SCALE = 40;
+const DEFAULT_SCALE = 60;
 
 // View state
 let offsetX = DEFAULT_OFFSET_X;
@@ -47,7 +47,7 @@ function graphToScreen(graphX, graphY) {
 
 // Calculate nice grid spacing
 function getGridSpacing(scale) {
-    const targetPixelSpacing = 50; // Target spacing in pixels
+    const targetPixelSpacing = 75; // Target spacing in pixels
     const rawSpacing = targetPixelSpacing / scale;
 
     // Find nice numbers: 1, 2, 5, 10, 20, 50, 100, etc.
