@@ -209,6 +209,11 @@
     <!-- Monaco Editor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
 
+    <!-- DASM Compiler -->
+    <script src="desmo_tokenizer.js"></script>
+    <script src="dasm_compiler.js"></script>
+    <script src="dasm_runtime.js"></script>
+
     <!-- Editor Configuration -->
     <script src="editor.js"></script>
 
@@ -217,6 +222,9 @@
 
     <!-- UI Interactions -->
     <script>
+        // Initialize DASM Runtime
+        const dasmRuntime = new DasmRuntime();
+
         // Draggable separator
         const separator = document.getElementById('separator');
         const editorPanel = document.querySelector('.editor-panel');
@@ -255,6 +263,53 @@
                 separator.classList.remove('dragging');
                 document.body.style.cursor = 'default';
                 resizeCanvas(); // Resize canvas after separator drag
+            }
+        });
+
+        // Run button - compile desmo to dasm
+        document.querySelector('.topbar-buttons .topbar-button').addEventListener('click', function() {
+            if (this.textContent !== 'Run') return;
+
+            try {
+                // Get the desmo code from editor
+                const desmoCode = tabContents['graph.desmo'];
+
+                // Compile desmo to dasm
+                const dasmCode = dasmRuntime.compile(desmoCode);
+
+                // Update the dasm tab
+                tabContents['graph.dasm'] = dasmCode;
+
+                // If we're on the dasm tab, update the editor
+                if (currentTab === 'graph.dasm') {
+                    editor.setValue(dasmCode);
+                }
+
+                // Visual feedback
+                this.textContent = 'Compiled ✓';
+                this.style.background = '#21a343';
+                setTimeout(() => {
+                    this.textContent = 'Run';
+                    this.style.background = '#3e3e42';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Compilation error:', error);
+
+                // Show error feedback
+                this.textContent = 'Error ✗';
+                this.style.background = '#d32f2f';
+                setTimeout(() => {
+                    this.textContent = 'Run';
+                    this.style.background = '#3e3e42';
+                }, 2000);
+
+                // Log error to dasm tab
+                const errorMessage = `; COMPILATION ERROR\n; ${error.message}\n\n${error.stack || ''}`;
+                tabContents['graph.dasm'] = errorMessage;
+                if (currentTab === 'graph.dasm') {
+                    editor.setValue(errorMessage);
+                }
             }
         });
     </script>

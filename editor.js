@@ -6,34 +6,10 @@ const readOnlyTabs = ['graph.dasm', 'graph.wat'];
 
 // Tab state management
 const tabContents = {
-    'graph.desmo': `// Desmo Language Example
-$color: blue; $line: dashed;
-$thickness: 1;
-any function(x) = 0.5x + sin(x);
-
-function(x){a <= x <= b};
-
-uniform uint n = 1 <0, 10, 0>;
-$drag: all;
-uniform vec2 p = (0,0);
-
-draw(L);
-
-any g(x) = (x + a) /
-    (a + b^2);
-
-#private helper functions {
-    $color: black;
-    (a, 0);
-    (b, 0);
-
-    uniform float a = 1;
-    uniform float b = 1;
-
-    float w = (b-a)/n;
-    float[] L = [a,a+w,...,b-w];
-    public any draw(x) = polygon((x,0), (x,function(x)), (x+w,function(x)), (x+w,0));
-}
+    'graph.desmo': `// Simple Example
+any f(x) = x^2 + 2*x + 1
+vec2[] points = [(1,2), (3,4), (5,6)]
+polygon(f(points) + 1)
 `,
     'graph.dasm': `; Assembly-like intermediate representation
 ; Input parameters: A, B
