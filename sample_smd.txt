@@ -1,10 +1,10 @@
-"desmos assembly language"
+"smds assembly language"
 
 // example this:
 
-any f(x) = x^2 + 2*x + 1
-vec2[] points = [(1,2), (3,4), (5,6)]
-polygon(f(points) + 1)
+any myfunc(x) = x^2 + 2*x + 1;
+vec2[] points = [(1,2), (3,4), (5,6)];
+polygon(myfunc(points) + 1);
 
 // would be compiled to:
 
@@ -58,39 +58,37 @@ Once the program executes, the POLY_BUF0 memory can be read out to get the final
 dasm can be compiled into wasm, and eventually into something like x86 machine code, or gpu shaders via spir-v and cuda.
 There are several instructions, like VS_ADD which is vector-scalar add, and VV_ADD which is vector-vector add.
 
-A more complex .desmo example:
+A more complex .smd example:
 
-// Desmo Language Example
-any function(x) = 0.5x + sin(x);
+// Simple Example
+vec2[] points = [(1,2), (3,4), (5,6)];
 
-uniform uint n = 1 <0, 10, 0>;
-$drag: all;
-uniform vec2 p = (0,0);
-
-draw(L);
-
-any long_func(x) = (x + a) /
-    (a + b^2);
-
-#private helper functions {
-    $color: black;
-    (a, 0);
-    (b, 0);
-
-    uniform float a = 1;
-    uniform float b = 1;
-
-    float w = (b-a)/n;
-    float[] L = [a,a+w,...,b-w];
-    public any draw(x) = polygon((x,0), (x,function(x)), (x+w,function(x)), (x+w,0));
+any myfunc(any x) {
+    any n = x + 3;
+    any b = x^2;
+    return x^2 + 2*x + 1) / (n + b);
 }
+
+uniform int size = 5;
+$color: black;
+vec2[] grid = for (x: [0...size], y: [0...size]) {
+    (x, y);
+}
+
+vec2[] points_aaa = switch {
+    grid.x > 0: [(0,0)],
+    grid.y > 0: [(0,0)],
+    [(1,1)]
+}
+
+polygon(myfunc(points))
 
 uniforms are variables that can be changed at runtime from the UI, and are essentially treated as static during execution,
 but are updated between frames without needing to recompile the entire program.
 
 Things can be declared as any, this is basically like a mix of templates for functions and the auto keyword in c++.
 The # denotes a "folder", and is mostly just a way to group things together. private and public keywords control visibility of functions and variables.
-In desmos technically everything is globally scoped, but here private folders can be locally scoped, but this would just be essentiually a macro
+In smds technically everything is globally scoped, but here private folders can be locally scoped, but this would just be essentiually a macro
 that prepends the folder id to everything inside of it to avoid name collisions, still compiled the same way.
 
 $ if for formatting, ignored for assembly.

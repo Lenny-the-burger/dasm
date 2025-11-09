@@ -1,15 +1,33 @@
 // Monaco Editor Configuration and Custom Language Setup
 
 let editor;
-let currentTab = 'graph.desmo';
+let currentTab = 'graph.smd';
 const readOnlyTabs = ['graph.dasm', 'graph.wat'];
 
 // Tab state management
 const tabContents = {
-    'graph.desmo': `// Simple Example
-any f(x) = x^2 + 2*x + 1
-vec2[] points = [(1,2), (3,4), (5,6)]
-polygon(f(points) + 1)
+    'graph.smd': `// Simple Example
+vec2[] points = [(1,2), (3,4), (5,6)];
+
+any myfunc(any x) {
+    any n = x + 3;
+    any b = x^2;
+    return x^2 + 2*x + 1) / (n + b);
+}
+
+uniform int size = 5;
+$color: black;
+vec2[] grid = for (x: [0...size], y: [0...size]) {
+    (x, y);
+}
+
+vec2[] points_aaa = switch {
+    grid.x > 0: [(0,0)],
+    grid.y > 0: [(0,0)],
+    [(1,1)]
+}
+
+polygon(myfunc(points))
 `,
     'graph.dasm': `; Assembly-like intermediate representation
 ; Input parameters: A, B
@@ -94,18 +112,18 @@ end:
 
 // Language mapping for Monaco
 const languageMap = {
-    'graph.desmo': 'desmo',
+    'graph.smd': 'smd',
     'graph.dasm': 'plaintext',
     'graph.wat': 'plaintext'
 };
 
-// Register custom Desmo language
-function registerDesmoLanguage() {
+// Register custom Smd language
+function registerSmdLanguage() {
     // Register the language
-    monaco.languages.register({ id: 'desmo' });
+    monaco.languages.register({ id: 'smd' });
 
     // Set language configuration for bracket matching
-    monaco.languages.setLanguageConfiguration('desmo', {
+    monaco.languages.setLanguageConfiguration('smd', {
         brackets: [
             ['{', '}'],
             ['[', ']'],
@@ -124,7 +142,7 @@ function registerDesmoLanguage() {
     });
 
     // Define syntax highlighting rules
-    monaco.languages.setMonarchTokensProvider('desmo', {
+    monaco.languages.setMonarchTokensProvider('smd', {
         tokenizer: {
             root: [
                 // Comments
@@ -132,7 +150,7 @@ function registerDesmoLanguage() {
                 [/\/\*/, 'comment', '@comment'],
 
                 // Keywords
-                [/\b(uniform|public|private)\b/, 'keyword'],
+                [/\b(uniform|for|switch|return)\b/, 'keyword'],
 
                 // Array types (type followed by [])
                 [/\b(float|int|vec2|vec3|ivec2|ivec3|uint|uvec2|uvec3|any)\[\]/, 'type.array'],
@@ -140,14 +158,10 @@ function registerDesmoLanguage() {
                 // Types
                 [/\b(float|int|vec2|vec3|ivec2|ivec3|uint|uvec2|uvec3|any)\b/, 'type'],
 
-                // Folder declarations with names
-                [/#\s*private\s+/, 'keyword.folder', '@foldername'],
-                [/#\s*/, 'keyword.folder', '@foldername'],
+                // Formatting directives start with $
+                [/^\$[a-zA-Z_]\w*\s*:.*?;/, 'formatting'],
 
-                // Formatting directives - complete line with $ prefix
-                [/\$[a-zA-Z_]\w*\s*:.*?;/, 'formatting'],
-
-                // Built-in functions
+                // Builtins
                 [/\b(sin|cos|tan|sqrt|abs|floor|ceil|round|log|ln|exp|polygon|random|min|max)\b/, 'function.builtin'],
 
                 // Function calls and definitions (identifier followed by parentheses)
@@ -169,11 +183,6 @@ function registerDesmoLanguage() {
                 [/[a-zA-Z_]\w*/, 'variable'],
             ],
 
-            foldername: [
-                [/[^\{]+/, 'string.folder'],
-                [/\{/, '@brackets', '@pop']
-            ],
-
             comment: [
                 [/[^\/*]+/, 'comment'],
                 [/\*\//, 'comment', '@pop'],
@@ -183,18 +192,16 @@ function registerDesmoLanguage() {
     });
 
     // Define theme with custom colors
-    monaco.editor.defineTheme('desmo-dark', {
+    monaco.editor.defineTheme('smd-dark', {
         base: 'vs-dark',
         inherit: true,
         rules: [
             { token: 'keyword', foreground: 'C586C0' },
             { token: 'type', foreground: '569CD6' },
             { token: 'type.array', foreground: '569CD6' },
-            { token: 'keyword.folder', foreground: 'D4A959' },
-            { token: 'string.folder', foreground: 'CE9178' },
             { token: 'formatting', foreground: '#8a8a8a' },
             { token: 'function', foreground: 'DCDCAA' },
-            { token: 'function.builtin', foreground: 'DCDCAA' },
+            { token: 'function.builtin', foreground: '#569CD6' },
             { token: 'variable', foreground: '9cdcfe' },
             { token: 'number', foreground: 'B5CEA8' },
             { token: 'operator', foreground: 'B4B4B4' },
@@ -211,7 +218,7 @@ function registerDesmoLanguage() {
     });
 
     // Register autocomplete provider
-    monaco.languages.registerCompletionItemProvider('desmo', {
+    monaco.languages.registerCompletionItemProvider('smd', {
         provideCompletionItems: (model, position) => {
             const word = model.getWordUntilPosition(position);
             const range = {
@@ -229,7 +236,7 @@ function registerDesmoLanguage() {
             // Built-in functions to exclude
             const builtins = new Set(['sin', 'cos', 'tan', 'sqrt', 'abs', 'floor', 'ceil',
                 'round', 'log', 'ln', 'exp', 'polygon', 'random', 'min', 'max']);
-            const keywords = new Set(['uniform', 'public', 'private']);
+            const keywords = new Set(['uniform', 'for', 'switch']);
 
             // Match function definitions: name(params) = ...
             const functionPattern = /([a-zA-Z_]\w*)\s*\([^)]*\)\s*=/g;
@@ -282,35 +289,17 @@ function registerDesmoLanguage() {
                     range: range
                 },
                 {
-                    label: 'public',
+                    label: 'for',
                     kind: monaco.languages.CompletionItemKind.Keyword,
                     insertText: 'public ',
-                    documentation: 'Make a variable or function public (visible outside folder scope)',
+                    documentation: 'List comprehension',
                     range: range
                 },
                 {
-                    label: 'private',
+                    label: 'switch',
                     kind: monaco.languages.CompletionItemKind.Keyword,
                     insertText: 'private ',
-                    documentation: 'Make a folder private (contents not visible outside)',
-                    range: range
-                },
-
-                // Folder
-                {
-                    label: '#folder',
-                    kind: monaco.languages.CompletionItemKind.Snippet,
-                    insertText: '#${1:name} {\n\t$0\n}',
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    documentation: 'Create a folder to organize expressions',
-                    range: range
-                },
-                {
-                    label: '#private folder',
-                    kind: monaco.languages.CompletionItemKind.Snippet,
-                    insertText: '#private ${1:name} {\n\t$0\n}',
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    documentation: 'Create a private folder (scoped variables)',
+                    documentation: 'Peicewise',
                     range: range
                 },
 
@@ -452,15 +441,15 @@ function registerDesmoLanguage() {
     });
 
     // Register hover provider for documentation
-    monaco.languages.registerHoverProvider('desmo', {
+    monaco.languages.registerHoverProvider('smd', {
         provideHover: (model, position) => {
             const word = model.getWordAtPosition(position);
             if (!word) return null;
 
             const documentation = {
                 'uniform': 'Declares an interactive variable with a slider. Syntax: uniform var = value <min, max, step>;',
-                'public': 'Makes a variable or function visible outside its folder scope',
-                'private': 'Creates a private folder where contents are scoped and not suggested by intellisense',
+                'for': 'List comprehension',
+                'switch': 'Peicewise',
                 'sin': 'Sine trigonometric function',
                 'cos': 'Cosine trigonometric function',
                 'tan': 'Tangent trigonometric function',
@@ -502,12 +491,12 @@ function registerDesmoLanguage() {
 function initializeEditor() {
     require(['vs/editor/editor.main'], function () {
         // Register the custom language
-        registerDesmoLanguage();
+        registerSmdLanguage();
 
         editor = monaco.editor.create(document.getElementById('editor-container'), {
             value: tabContents[currentTab],
             language: languageMap[currentTab],
-            theme: 'desmo-dark',
+            theme: 'smd-dark',
             automaticLayout: true,
             fontSize: 14,
             minimap: {

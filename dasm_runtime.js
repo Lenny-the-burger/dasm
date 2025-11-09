@@ -8,22 +8,22 @@ class DasmRuntime {
     }
 
     /**
-     * Compile desmo source code to DASM assembly
-     * @param {string} desmoCode - The desmo source code to compile
+     * Compile smd source code to DASM assembly
+     * @param {string} smdCode - The smd source code to compile
      * @returns {string} - The compiled DASM assembly code
      */
-    compile(desmoCode) {
+    compile(smdCode) {
         // Get the tokenizer and compiler functions
         const tokenize = typeof window !== 'undefined'
-            ? window.DesmoTokenizer.tokenize
-            : require('./desmo_tokenizer.js').tokenize;
+            ? window.SmdTokenizer.tokenize
+            : require('./smd_tokenizer.js').tokenize;
 
         const compile = typeof window !== 'undefined'
             ? window.DasmCompiler.compile
             : require('./dasm_compiler.js').compile;
 
-        // Tokenize the desmo code
-        const tokens = tokenize(desmoCode);
+        // Tokenize the smd code
+        const tokens = tokenize(smdCode);
 
         // Compile tokens to DASM
         const dasmCode = compile(tokens);

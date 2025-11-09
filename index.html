@@ -12,13 +12,13 @@
 <body>
     <div class="topbar">
         <div class="tabs-container">
-            <button class="tab active">graph.desmo</button>
+            <button class="tab active">graph.smd</button>
             <button class="tab">graph.dasm</button>
             <button class="tab">graph.wat</button>
         </div>
         <div class="logo">.dasm</div>
         <div class="topbar-buttons">
-            <button class="topbar-button">Run</button>
+            <button class="topbar-button">Compile</button>
             <button class="topbar-button">Export</button>
             <button class="topbar-button">Settings</button>
         </div>
@@ -43,7 +43,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
 
     <!-- DASM Compiler -->
-    <script src="desmo_tokenizer.js"></script>
+    <script src="smd_tokenizer.js"></script>
     <script src="dasm_compiler.js"></script>
     <script src="dasm_runtime.js"></script>
 
@@ -99,49 +99,49 @@
             }
         });
 
-        // Run button - compile desmo to dasm
+        // Run button - compile smd to dasm
         document.querySelector('.topbar-buttons .topbar-button').addEventListener('click', function() {
-            if (this.textContent !== 'Run') return;
+            if (this.textContent == 'Compile') {
+                try {
+                    // Get the smd code from editor
+                    const smdCode = tabContents['graph.smd'];
 
-            try {
-                // Get the desmo code from editor
-                const desmoCode = tabContents['graph.desmo'];
+                    // Compile smd to dasm
+                    const dasmCode = dasmRuntime.compile(smdCode);
 
-                // Compile desmo to dasm
-                const dasmCode = dasmRuntime.compile(desmoCode);
+                    // Update the dasm tab
+                    tabContents['graph.dasm'] = dasmCode;
 
-                // Update the dasm tab
-                tabContents['graph.dasm'] = dasmCode;
+                    // If we're on the dasm tab, update the editor
+                    if (currentTab === 'graph.dasm') {
+                        editor.setValue(dasmCode);
+                    }
 
-                // If we're on the dasm tab, update the editor
-                if (currentTab === 'graph.dasm') {
-                    editor.setValue(dasmCode);
-                }
+                    // Visual feedback
+                    this.textContent = 'Compiled ✓';
+                    this.style.background = '#21a343';
+                    setTimeout(() => {
+                        this.textContent = 'Run';
+                        this.style.background = '#3e3e42';
+                    }, 1500);
 
-                // Visual feedback
-                this.textContent = 'Compiled ✓';
-                this.style.background = '#21a343';
-                setTimeout(() => {
-                    this.textContent = 'Run';
-                    this.style.background = '#3e3e42';
-                }, 1500);
+                } catch (error) {
+                    console.error('Compilation error:', error);
 
-            } catch (error) {
-                console.error('Compilation error:', error);
+                    // Show error feedback
+                    this.textContent = 'Error ✗';
+                    this.style.background = '#d32f2f';
+                    setTimeout(() => {
+                        this.textContent = 'Run';
+                        this.style.background = '#3e3e42';
+                    }, 2000);
 
-                // Show error feedback
-                this.textContent = 'Error ✗';
-                this.style.background = '#d32f2f';
-                setTimeout(() => {
-                    this.textContent = 'Run';
-                    this.style.background = '#3e3e42';
-                }, 2000);
-
-                // Log error to dasm tab
-                const errorMessage = `; COMPILATION ERROR\n; ${error.message}\n\n${error.stack || ''}`;
-                tabContents['graph.dasm'] = errorMessage;
-                if (currentTab === 'graph.dasm') {
-                    editor.setValue(errorMessage);
+                    // Log error to dasm tab
+                    const errorMessage = `; COMPILATION ERROR\n; ${error.message}\n\n${error.stack || ''}`;
+                    tabContents['graph.dasm'] = errorMessage;
+                    if (currentTab === 'graph.dasm') {
+                        editor.setValue(errorMessage);
+                    }
                 }
             }
         });
