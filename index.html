@@ -39,11 +39,13 @@
         </div>
     </div>
 
+    <!-- Chevrotain Parser Library -->
+    <script type="module" src="https://unpkg.com/chevrotain/lib/chevrotain.mjs"></script>
+
     <!-- Monaco Editor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
 
     <!-- DASM Compiler -->
-    <script src="smd_tokenizer.js"></script>
     <script src="dasm_compiler.js"></script>
     <script src="dasm_runtime.js"></script>
 
@@ -100,9 +102,14 @@
         });
 
         // Run button - compile smd to dasm
-        document.querySelector('.topbar-buttons .topbar-button').addEventListener('click', function() {
+        document.querySelector('.topbar-buttons .topbar-button').addEventListener('click', function () {
             if (this.textContent == 'Compile') {
                 try {
+                    // Save current editor content if we're on an editable tab
+                    if (!readOnlyTabs.includes(currentTab)) {
+                        tabContents[currentTab] = editor.getValue();
+                    }
+
                     // Get the smd code from editor
                     const smdCode = tabContents['graph.smd'];
 
@@ -121,7 +128,7 @@
                     this.textContent = 'Compiled ✓';
                     this.style.background = '#21a343';
                     setTimeout(() => {
-                        this.textContent = 'Run';
+                        this.textContent = 'Compile';
                         this.style.background = '#3e3e42';
                     }, 1500);
 
@@ -132,7 +139,7 @@
                     this.textContent = 'Error ✗';
                     this.style.background = '#d32f2f';
                     setTimeout(() => {
-                        this.textContent = 'Run';
+                        this.textContent = 'Compile';
                         this.style.background = '#3e3e42';
                     }, 2000);
 

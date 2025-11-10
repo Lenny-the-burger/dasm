@@ -12,22 +12,26 @@ vec2[] points = [(1,2), (3,4), (5,6)];
 any myfunc(any x) {
     any n = x + 3;
     any b = x^2;
-    return x^2 + 2*x + 1) / (n + b);
-}
+    return (x^2 + 2*x + 1) / (n + b);
+};
+
+any otherufunc(any x) {
+    return x + 2;
+};
 
 uniform int size = 5;
 $color: black;
 vec2[] grid = for (x: [0...size], y: [0...size]) {
     (x, y);
-}
+};
 
 vec2[] points_aaa = switch {
     grid.x > 0: [(0,0)],
     grid.y > 0: [(0,0)],
     [(1,1)]
-}
+};
 
-polygon(myfunc(points))
+polygon(myfunc(points));
 `,
     'graph.dasm': `; Assembly-like intermediate representation
 ; Input parameters: A, B
@@ -201,7 +205,7 @@ function registerSmdLanguage() {
             { token: 'type.array', foreground: '569CD6' },
             { token: 'formatting', foreground: '#8a8a8a' },
             { token: 'function', foreground: 'DCDCAA' },
-            { token: 'function.builtin', foreground: '#569CD6' },
+            { token: 'function.builtin', foreground: '24b3ff' },
             { token: 'variable', foreground: '9cdcfe' },
             { token: 'number', foreground: 'B5CEA8' },
             { token: 'operator', foreground: 'B4B4B4' },
