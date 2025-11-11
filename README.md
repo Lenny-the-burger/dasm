@@ -1,6 +1,7 @@
 # dasm
 
-Smds assembly
+Desmos assembly or data parallel assembly if you want.
+Compiles from smd which is transparently compatible with desmos.
 
 Currently this deploys via cloudflare pages at https://dasm.pages.dev/
 
