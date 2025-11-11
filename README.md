@@ -7,7 +7,7 @@ Currently this deploys via cloudflare pages at https://dasm.pages.dev/
 
 ## Architecture
 
-This project uses [Chevrotain](https://chevrotain.io/) for parsing the DASM language.
+This project uses [Chevrotain](https://chevrotain.io/) for parsing smd.
 
 ### File Structure
 
