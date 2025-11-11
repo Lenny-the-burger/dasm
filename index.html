@@ -39,14 +39,20 @@
         </div>
     </div>
 
-    <!-- Chevrotain Parser Library -->
-    <script type="module" src="https://unpkg.com/chevrotain/lib/chevrotain.mjs"></script>
-
     <!-- Monaco Editor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
 
-    <!-- DASM Compiler -->
-    <script src="dasm_compiler.js"></script>
+    <!-- Import map for Chevrotain -->
+    <script type="importmap">
+    {
+        "imports": {
+            "chevrotain": "https://unpkg.com/chevrotain@11.0.3/lib/chevrotain.mjs"
+        }
+    }
+    </script>
+
+    <!-- DASM Compiler (ES Module with Chevrotain) -->
+    <script type="module" src="dasm_compiler.mjs"></script>
     <script src="dasm_runtime.js"></script>
 
     <!-- Editor Configuration -->
@@ -116,12 +122,14 @@
                     // Compile smd to dasm
                     const dasmCode = dasmRuntime.compile(smdCode);
 
+                    const dasmString = JSON.stringify(dasmCode, null, 2);
+
                     // Update the dasm tab
-                    tabContents['graph.dasm'] = dasmCode;
+                    tabContents['graph.dasm'] = dasmString;
 
                     // If we're on the dasm tab, update the editor
                     if (currentTab === 'graph.dasm') {
-                        editor.setValue(dasmCode);
+                        editor.setValue(dasmString);
                     }
 
                     // Visual feedback
