@@ -1,12 +1,13 @@
 # dasm
 
-Smds assembly
+Desmos assembly or data parallel assembly if you want.
+Compiles from smd which is transparently compatible with desmos.
 
 Currently this deploys via cloudflare pages at https://dasm.pages.dev/
 
 ## Architecture
 
-This project uses [Chevrotain](https://chevrotain.io/) for parsing the DASM language.
+This project uses [Chevrotain](https://chevrotain.io/) for parsing smd.
 
 ### File Structure
 
