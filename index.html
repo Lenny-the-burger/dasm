@@ -1,165 +1,196 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dasm</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <title></title>
+    <style>
+        * {
+            color: azure;
+            background-color: #303030;
+            font-size: 16px;
+        }
+
+        .main {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px;
+        }
+
+            .main > * {
+                flex: 1;
+            }
+
+        strong {
+            font-size: 25px;
+        }
+
+        h1 {
+            font-size: 30px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        code {
+            background-color: #212121;
+            color: #ededed;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .docs {
+            margin-right: 20%;
+            margin-left: 20%;
+        }
+
+        .dasm-console {
+            height: 750px;
+            background-color: #202020;
+            margin-top: 10px;
+            font-family: monospace;
+            padding: 5px;
+        }
+
+        span {
+            background-color: transparent;
+        }
+
+        .con-err {
+            color: red;
+        }
+
+        .con-warn {
+            color: yellow;
+        }
+
+        .con-info {
+            color: dimgrey;
+        }
+    </style>
 </head>
 <body>
-    <div class="topbar">
-        <div class="tabs-container">
-            <button class="tab active">graph.smd</button>
-            <button class="tab">graph.dasm</button>
-            <button class="tab">graph.wat</button>
-        </div>
-        <div class="logo">.dasm</div>
-        <div class="topbar-buttons">
-            <button class="topbar-button">Compile</button>
-            <button class="topbar-button">Export</button>
-            <button class="topbar-button">Settings</button>
-        </div>
-    </div>
+    <marquee>
+        <img class="logo" src="cooltext497159573106861.gif" />
+    </marquee>
+    <div class="main">
+        <div>
+            <form>
+                <textarea class="dasm-console" id="source-input" cols="80" rows="40" spellcheck="false">
+@DATA
+num a = 10
 
-    <div class="main-container">
-        <div class="editor-panel">
-            <div id="editor-container"></div>
+vec3 cam_pos = (0, 0, -5)
+vec3 _1cam_dir = (0, 0, 1)
+
+vec3[] points = [
+    (-1, -1, 0),
+    (1, -1, 0),
+    (1, 1, 0),
+    (-1, 1, 0)
+]
+
+@FUNCTIONS
+
+vecn unit(vecn v):
+return v / abs(v)
+
+num psdf(vec3 point, vec3 origin, vec3 normal):
+return dot(normal, point - origin)
+
+num pipe_frac(num fov):
+num z = 1 / tan(fov / 2)
+return z / (z + 1)
+
+@PROGRAM
+
+vec3 cam_dir = unit(_1)
+
+</textarea>
+            </form>
+            <button id="dasm-compile">Compile</button>
         </div>
 
-        <div class="separator" id="separator"></div>
-
-        <div class="canvas-panel">
-            <div class="canvas-controls">
-                <button class="canvas-button" id="homeButton" title="Reset View">⌂</button>
+        <div>
+            <div class="dasm-console" id="ir-repr">
+                click the compile button and the dasm will appear here
             </div>
-            <canvas id="canvas"></canvas>
+            <button id="show-dasm">Show dasm</button>
+            <button id="show-wat">Show wat</button>
+        </div>
+
+        <div class="dasm-console" id="actual-console">
+            > hello
         </div>
     </div>
 
-    <!-- Monaco Editor -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
 
-    <!-- Import map for Chevrotain -->
-    <script type="importmap">
-    {
-        "imports": {
-            "chevrotain": "https://unpkg.com/chevrotain@11.0.3/lib/chevrotain.mjs"
-        }
-    }
+    <script type="module">
+        import { dasm_runtime } from './dist/dasm.js';
+        window.dasm = new dasm_runtime();
+        let stdout = dasm.get_stdout();
+        document.getElementById("actual-console").innerHTML = stdout;
+
+        // Compile button
+        document.getElementById("dasm-compile").onclick = function () {
+            let source = document.getElementById("source-input").value;
+            dasm.compile(source);
+
+            let ir_repr = dasm.get_dasm();
+            document.getElementById("ir-repr").innerText = ir_repr;
+
+            let stdout = dasm.get_stdout();
+            document.getElementById("actual-console").innerHTML = stdout; // this contains span color tags
+        };
+
+        // Show dasm button
+        document.getElementById("show-dasm").onclick = function () {
+            let ir_repr = dasm.get_dasm();
+            document.getElementById("ir-repr").innerText = ir_repr;
+        };
+
+        // Show wat button
+        document.getElementById("show-wat").onclick = function () {
+            let wat_repr = dasm.get_wat();
+            document.getElementById("ir-repr").innerText = wat_repr;
+        };
     </script>
 
-    <!-- DASM Compiler (ES Module with Chevrotain) -->
-    <script type="module" src="dasm_compiler.mjs"></script>
-    <script src="dasm_runtime.js"></script>
 
-    <!-- Editor Configuration -->
-    <script src="editor.js"></script>
+    <div class="docs">
+        <h1>Docs</h1>
+        <strong>Section labels:</strong>
+        <p style="white-space: pre-line;"> Section labels start with '@' character and are:
+            <ol>
+                <li>
+                    <b>@DATA</b>
+                    The data section holds immediate values. These have to be defined outside of the code because they are loaded into memory, while regular constants are held in the actual machine code.
 
-    <!-- Canvas Configuration -->
-    <script src="canvas.js"></script>
+                    If you want to have a constant that needs a function call to be computed, for example
+                    <code>vec2 a = (0, 0) + 2</code> you can define it as
+                    <code>_#name</code>, and then in the program section you can assign it
+                    <code>name = something(_1)</code>, where # is some unique number. This signals the compiler that the value is constexpr and can be computed only once and clobbered into memory. Uniforms cannot be consetexpr.
+                </li>
+                <li>
+                    <b>@FUNCTIONS</b>
+                    This section holds all your callable functions. Look at the code sample I think you get the syntax.
+                    Generally the compiler will attempt to inline everything, but not always. If your function is not inlined, in the wasm it will just be a regular function that is called. This is mostly fine but inlining is usually better for performance. If your function is called &lt;2 times it will always be inlined.
+                </li>
+                <li>
+                    <b>@PROGRAM</b>
+                    This is where the main code goes.
+                </li>
+            </ol>
 
-    <!-- UI Interactions -->
-    <script>
-        // Initialize DASM Runtime
-        const dasmRuntime = new DasmRuntime();
+            Yes this makes dasm annoying to write, but this is an assembly like language. your lucky i let you put multiple operations per line.
+        </p>
+        <p style="white-space: pre-line;"><strong>Variables:</strong>
+            Variables can be of type <code>num</code> (default desmos number type), <code>vec2</code>, <code>vec3</code> and lists of these types (eg. <code>vec3[]</code>). Things can also be declared as <code>any</code> this works generally the same as templates in c++. If you need to restrict what the template can be, you can use <code>any[]</code> for lists of any type, or <code>vecn</code> and <code>vecn[]</code> to restrict to any vector type.
 
-        // Draggable separator
-        const separator = document.getElementById('separator');
-        const editorPanel = document.querySelector('.editor-panel');
-        const canvasPanel = document.querySelector('.canvas-panel');
-        let isDragging = false;
+            Most variables and operations will be fused if possible. eg. if you do <code>num b = 1 + a; num c = b - 20</code> it will be treated the same as <code>num c = 1 + a - 20</code>.
+        </p>
+    </div>
 
-        separator.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            separator.classList.add('dragging');
-            document.body.style.cursor = 'col-resize';
-            e.preventDefault();
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-
-            const containerRect = document.querySelector('.main-container').getBoundingClientRect();
-            const newLeftWidth = e.clientX - containerRect.left;
-            const totalWidth = containerRect.width;
-            const minWidth = 200;
-
-            if (newLeftWidth > minWidth && (totalWidth - newLeftWidth) > minWidth) {
-                const leftFlex = newLeftWidth / totalWidth;
-                const rightFlex = (totalWidth - newLeftWidth) / totalWidth;
-
-                editorPanel.style.flexGrow = leftFlex;
-                editorPanel.style.flexShrink = leftFlex;
-                canvasPanel.style.flexGrow = rightFlex;
-                canvasPanel.style.flexShrink = rightFlex;
-            }
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                separator.classList.remove('dragging');
-                document.body.style.cursor = 'default';
-                resizeCanvas(); // Resize canvas after separator drag
-            }
-        });
-
-        // Run button - compile smd to dasm
-        document.querySelector('.topbar-buttons .topbar-button').addEventListener('click', function () {
-            if (this.textContent == 'Compile') {
-                try {
-                    // Save current editor content if we're on an editable tab
-                    if (!readOnlyTabs.includes(currentTab)) {
-                        tabContents[currentTab] = editor.getValue();
-                    }
-
-                    // Get the smd code from editor
-                    const smdCode = tabContents['graph.smd'];
-
-                    // Compile smd to dasm
-                    const dasmCode = dasmRuntime.compile(smdCode);
-
-                    const dasmString = JSON.stringify(dasmCode, null, 2);
-
-                    // Update the dasm tab
-                    tabContents['graph.dasm'] = dasmString;
-
-                    // If we're on the dasm tab, update the editor
-                    if (currentTab === 'graph.dasm') {
-                        editor.setValue(dasmString);
-                    }
-
-                    // Visual feedback
-                    this.textContent = 'Compiled ✓';
-                    this.style.background = '#21a343';
-                    setTimeout(() => {
-                        this.textContent = 'Compile';
-                        this.style.background = '#3e3e42';
-                    }, 1500);
-
-                } catch (error) {
-                    console.error('Compilation error:', error);
-
-                    // Show error feedback
-                    this.textContent = 'Error ✗';
-                    this.style.background = '#d32f2f';
-                    setTimeout(() => {
-                        this.textContent = 'Compile';
-                        this.style.background = '#3e3e42';
-                    }, 2000);
-
-                    // Log error to dasm tab
-                    const errorMessage = `; COMPILATION ERROR\n; ${error.message}\n\n${error.stack || ''}`;
-                    tabContents['graph.dasm'] = errorMessage;
-                    if (currentTab === 'graph.dasm') {
-                        editor.setValue(errorMessage);
-                    }
-                }
-            }
-        });
-    </script>
 </body>
 </html>

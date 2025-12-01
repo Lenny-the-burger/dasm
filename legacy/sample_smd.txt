@@ -4,7 +4,7 @@
 
 any myfunc(x) = x^2 + 2*x + 1;
 vec2[] points = [(1,2), (3,4), (5,6)];
-polygon(myfunc(points) + 1);
+triangle(myfunc(points) + 1);
 
 // would be compiled to:
 
@@ -34,7 +34,7 @@ FUNC0_RET_0: VVEC2 3 // the space to write the return values of FUNC0 when calle
 
 // output buffer, this is only written to, and rendered from by js outside of wasm.
 // sometimes this will need to be another actual allocation, but a lot you can just reuse the return buffer of the last function call since
-// polygon() doesnt actually do anything with its input other than read it.
+// triangle() doesnt actually do anything with its input other than read it.
 POLY_BUF0: VVEC2 3
 
 // opcode param1 param2: dest
@@ -53,7 +53,7 @@ Data is written destructivly, as variables cannot be reassigned, like in functio
 This lets us avoid all runtime allocation. This isnt the most efficient use of memory, but it is designed to be
 parallelizable and fast to compute.
 
-Once the program executes, the POLY_BUF0 memory can be read out to get the final result of the polygon() call and rendered to the canvas.
+Once the program executes, the POLY_BUF0 memory can be read out to get the final result of the triangle() call and rendered to the canvas.
 
 dasm can be compiled into wasm, and eventually into something like x86 machine code, or gpu shaders via spir-v and cuda.
 There are several instructions, like VS_ADD which is vector-scalar add, and VV_ADD which is vector-vector add.
@@ -81,7 +81,7 @@ vec2[] points_aaa = switch {
     [(1,1)]
 }
 
-polygon(myfunc(points))
+triangle(myfunc(points))
 
 uniforms are variables that can be changed at runtime from the UI, and are essentially treated as static during execution,
 but are updated between frames without needing to recompile the entire program.

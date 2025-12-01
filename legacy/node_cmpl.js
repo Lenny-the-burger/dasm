@@ -28,7 +28,7 @@ vec2[] points_aaa = switch {
     [(1,1)]
 };
 
-polygon(myfunc(points));
+triangle(myfunc(points));
 `;
 
 const dasmCode = go_compile(smdCode);

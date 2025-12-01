@@ -1,0 +1,67 @@
+The dasm (desmos or data-parallel assembly) language specification.
+
+Opcodes:
+
+Opcodes here are listed in their "generic" form. Actual opcodes will have one of the following prefixes depending on the data types they operate on:
+- VV_: Vector-Vector operation
+- VS_: Vector-Scalar operation
+- SS_: Scalar-Scalar operation
+
+General Opcodes:
+CMP_EQ src1, src2: dest
+	Compares src1 and src2 for equality. If they are equal, dest is set to 1, otherwise it is set to 0.
+
+CMP_LT src1, src2: dest
+	Compares src1 and src2. If src1 is less than src2, dest is set to 1, otherwise it is set to 0.
+
+CMP_GT src1, src2: dest
+	Compares src1 and src2. If src1 is greater than src2, dest is set to 1, otherwise it is set to 0.
+
+JMP label
+	Jumps to the instruction at the specified label.
+
+Note that dasm does not contain conditional jmp or other direct branching instructions. Control flow is handled by the scheduler system.
+Comparisons are computed on the data in a single task, and then the scheduler uses the results of those comparisons as a mask to schedule future tasks.
+
+
+Arithmetic Opcodes:
+ADD src1, src2: dest
+	Adds src1 and src2, storing the result in dest.
+
+SUB src1, src2: dest
+	Subtracts src2 from src1, storing the result in dest.
+
+MUL src1, src2: dest
+	Multiplies src1 and src2, storing the result in dest.
+
+DIV src1, src2: dest
+	Divides src1 by src2, storing the result in dest.
+
+POW base, exponent: dest
+	Raises base to the power of exponent, storing the result in dest.
+
+SQRT src: dest
+	Calculates the square root of src, storing the result in dest.
+
+NRT src, n: dest
+	Calculates the n-th root of src, storing the result in dest.
+
+LOG src, base: dest
+	Calculates the logarithm of src with the specified base, storing the result in dest.
+
+SIN src: dest
+	Calculates the sine of src (in radians), storing the result in dest.
+
+COS src: dest
+	Calculates the cosine of src (in radians), storing the result in dest.
+	
+TAN src: dest
+	Calculates the tangent of src (in radians), storing the result in dest.
+
+Function Opcodes:
+CALL func_name, arg1, arg2, ... : dest
+	Calls the function func_name with the provided arguments, storing the result in dest.
+	This assumes that func_name does indeed take the number of arguments provided.
+
+RET
+	Returns from the current function.

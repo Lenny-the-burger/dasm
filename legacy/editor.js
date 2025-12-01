@@ -31,7 +31,7 @@ vec2[] points_aaa = switch {
     [(1,1)]
 };
 
-polygon(myfunc(points));
+triangle(myfunc(points));
 `,
     'graph.dasm': `; Assembly-like intermediate representation
 ; Input parameters: A, B
@@ -166,7 +166,7 @@ function registerSmdLanguage() {
                 [/^\$[a-zA-Z_]\w*\s*:.*?;/, 'formatting'],
 
                 // Builtins
-                [/\b(sin|cos|tan|sqrt|abs|floor|ceil|round|log|ln|exp|polygon|random|min|max)\b/, 'function.builtin'],
+                [/\b(sin|cos|tan|sqrt|abs|floor|ceil|round|log|ln|exp|triangle|random|min|max)\b/, 'function.builtin'],
 
                 // Function calls and definitions (identifier followed by parentheses)
                 [/[a-zA-Z_]\w*(?=\s*\()/, 'function'],
@@ -239,7 +239,7 @@ function registerSmdLanguage() {
 
             // Built-in functions to exclude
             const builtins = new Set(['sin', 'cos', 'tan', 'sqrt', 'abs', 'floor', 'ceil',
-                'round', 'log', 'ln', 'exp', 'polygon', 'random', 'min', 'max']);
+                'round', 'log', 'ln', 'exp', 'triangle', 'random', 'min', 'max']);
             const keywords = new Set(['uniform', 'for', 'switch']);
 
             // Match function definitions: name(params) = ...
@@ -407,11 +407,11 @@ function registerSmdLanguage() {
                     range: range
                 },
                 {
-                    label: 'polygon',
+                    label: 'triangle',
                     kind: monaco.languages.CompletionItemKind.Function,
-                    insertText: 'polygon(${1:points})',
+                    insertText: 'triangle(${1:points})',
                     insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                    documentation: 'Create a polygon from list of points',
+                    documentation: 'Create a triangle from list of points',
                     range: range
                 },
                 {
@@ -462,7 +462,7 @@ function registerSmdLanguage() {
                 'log': 'Logarithm base 10',
                 'ln': 'Natural logarithm (base e)',
                 'exp': 'Exponential function (e^x)',
-                'polygon': 'Creates a polygon from a list of coordinate points',
+                'triangle': 'Creates a triangle from a list of coordinate points',
                 'random': 'Generates a random number with optional seed',
                 'min': 'Returns the minimum of two values',
                 'max': 'Returns the maximum of two values',

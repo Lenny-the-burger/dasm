@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "es2020",
+    "outDir": "dist",
+    "declaration": false,
+    "sourceMap": false,
+    "inlineSourceMap": false,
+    "inlineSources": false,
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "allowJs": true
+  }
+}
