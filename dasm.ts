@@ -1,5 +1,5 @@
 // @ts-ignore
-import { simd, relaxedSimd } from "../node_modules/wasm-feature-detect/dist/esm/index.js";
+import { simd, relaxedSimd } from "https://unpkg.com/wasm-feature-detect@1.8.0/dist/esm/index.js";
 
 enum SectionType {
     NONE,
@@ -38,6 +38,23 @@ type singletDataVar<T> = {
 type dataListVar<T> = {
     name: string;
     values: T[];
+}
+
+
+enum BinaryOp {
+    ADD = "+",
+    SUB = "-",
+    MUL = "*",
+    DIV = "/"
+}
+
+enum BuiltInFunc {
+    ABS = "abs",
+    SQRT = "sqrt",
+    SIN = "sin",
+    COS = "cos",
+    TAN = "tan",
+    POW = "pow"
 }
 
 // the dasm runtime and compiler
@@ -208,7 +225,6 @@ class dasm_runtime {
 
         // eventually you will also be able to load from a datafile for big lists
     }
-
     parseDataSingletVar(tokens: string[], line_num: number) {
         const merged_tokens = tokens.slice(3).join("");
         const var_name = tokens[1];
@@ -235,7 +251,6 @@ class dasm_runtime {
                 this.compile_failed("Unknown data type: '" + tokens[0] + "' at line " + line_num);
         }
     }
-
     parseDataListVar(tokens: string[], line_num: number) {
         const merged_tokens = tokens.slice(3).join("");
         const values_str = merged_tokens.replace(/\s/g, ''); // remove all whitespace
@@ -292,7 +307,6 @@ class dasm_runtime {
         if (isNaN(value)) this.compile_failed("Error parsing num literal: '" + token + "' at line " + line_num);
         return { value: value };
     }
-
     // should be in the format of (num,num)
     parseVec2Literal(token: string, line_num: number): dataVec2 {
         if (!token.startsWith("(") || !token.endsWith(")")) this.compile_failed("Error parsing vec2 literal: '" + token + "' at line " + line_num);
@@ -307,7 +321,6 @@ class dasm_runtime {
 
         return { value: [x, y] };
     }
-
     // should be in the format of (num,num,num)
     parseVec3Literal(token: string, line_num: number): dataVec3 {
         if (!token.startsWith("(") || !token.endsWith(")")) this.compile_failed("Error parsing vec3 literal: '" + token + "' at line " + line_num);

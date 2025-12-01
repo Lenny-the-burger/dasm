@@ -1,5 +1,5 @@
 // @ts-ignore
-import { simd, relaxedSimd } from "../node_modules/wasm-feature-detect/dist/esm/index.js";
+import { simd, relaxedSimd } from "https://unpkg.com/wasm-feature-detect@1.8.0/dist/esm/index.js";
 var SectionType;
 (function (SectionType) {
     SectionType[SectionType["NONE"] = 0] = "NONE";
@@ -15,6 +15,22 @@ var DataType;
     DataType["VECN"] = "vecn";
     DataType["ANY"] = "any";
 })(DataType || (DataType = {}));
+var BinaryOp;
+(function (BinaryOp) {
+    BinaryOp["ADD"] = "+";
+    BinaryOp["SUB"] = "-";
+    BinaryOp["MUL"] = "*";
+    BinaryOp["DIV"] = "/";
+})(BinaryOp || (BinaryOp = {}));
+var BuiltInFunc;
+(function (BuiltInFunc) {
+    BuiltInFunc["ABS"] = "abs";
+    BuiltInFunc["SQRT"] = "sqrt";
+    BuiltInFunc["SIN"] = "sin";
+    BuiltInFunc["COS"] = "cos";
+    BuiltInFunc["TAN"] = "tan";
+    BuiltInFunc["POW"] = "pow";
+})(BuiltInFunc || (BuiltInFunc = {}));
 // the dasm runtime and compiler
 class dasm_runtime {
     reset_compiler_state() {
