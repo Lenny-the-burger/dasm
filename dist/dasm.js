@@ -24,11 +24,11 @@ class dasm_runtime {
         this.data_lists.clear();
     }
     print_data_vars() {
-        this.cinfo("Data Singlet Variables:");
+        this.cout("Data Singlet Variables:<br>");
         this.data_singlets.forEach((value, key) => {
             this.cout(" - " + key + " = " + JSON.stringify(value.value) + "<br>");
         });
-        this.cinfo("Data List Variables:");
+        this.cout("Data List Variables:<br>");
         this.data_lists.forEach((value, key) => {
             this.cout(" - " + key + " = " + JSON.stringify(value.values) + "<br>");
         });
@@ -139,6 +139,7 @@ class dasm_runtime {
                     }
             }
         }
+        this.cinfo("Finished compiling in " + (new Date().getTime() - this.latest_compile_start_time.getTime()) + " ms");
     }
     parseDataVar(line, line_num) {
         const tokens = line.split(" ");
