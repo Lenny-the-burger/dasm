@@ -51,6 +51,7 @@
             margin-top: 10px;
             font-family: monospace;
             padding: 5px;
+            overflow: auto;
         }
 
         span {
@@ -84,12 +85,7 @@ num a = 10
 vec3 cam_pos = (0, 0, -5)
 vec3 _1cam_dir = (0, 0, 1)
 
-vec3[] points = [
-    (-1, -1, 0),
-    (1, -1, 0),
-    (1, 1, 0),
-    (-1, 1, 0)
-]
+vec3[] points = [(-1, -1, 0), (1, -1, 0), (1, 1, 0), (-1, 1, 0)]
 
 @FUNCTIONS
 
@@ -135,13 +131,29 @@ vec3 cam_dir = unit(_1)
         // Compile button
         document.getElementById("dasm-compile").onclick = function () {
             let source = document.getElementById("source-input").value;
-            dasm.compile(source);
+            try {
+                dasm.compile(source);
+            } catch (e) {
+                let stdout = dasm.get_stdout();
+                document.getElementById("actual-console").innerHTML = stdout; // this contains span color tags
+
+                // scroll to bottom of console
+                let console_div = document.getElementById("actual-console");
+                console_div.scrollTop = console_div.scrollHeight;
+
+                document.getElementById("ir-repr").innerText = "Compilation failed.";
+                return;
+            }
 
             let ir_repr = dasm.get_dasm();
             document.getElementById("ir-repr").innerText = ir_repr;
 
             let stdout = dasm.get_stdout();
             document.getElementById("actual-console").innerHTML = stdout; // this contains span color tags
+
+            // scroll to bottom of console
+            let console_div = document.getElementById("actual-console");
+            console_div.scrollTop = console_div.scrollHeight;
         };
 
         // Show dasm button
