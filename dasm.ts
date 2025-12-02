@@ -4,16 +4,19 @@ import { simd, relaxedSimd } from "https://unpkg.com/wasm-feature-detect@1.8.0/d
 enum SectionType {
     NONE,
     DATA,
-    FUCNTIONS,
+    FUNCTIONS,
     PROGRAM
 }
 
 enum DataType {
     NUM = "num",
     VEC2 = "vec2",
-    VEC3 = "vec3",
-    VECN = "vecn",
-    ANY = "any"
+    VEC3 = "vec3"
+}
+
+enum TemplateSpecifier {
+    ANY = "any",
+    VECN = "vecn"
 }
 
 // These are actually the only three data types. Everything else is just template declarations.
@@ -48,14 +51,190 @@ enum BinaryOp {
     DIV = "/"
 }
 
-enum BuiltInFunc {
+enum DasmInstrNames {
+    // arithmetic
+    ADD = "add",
+    SUB = "sub",
+    MUL = "mul",
+    DIV = "div",
+    POW = "pow",
     ABS = "abs",
     SQRT = "sqrt",
-    SIN = "sin",
-    COS = "cos",
-    TAN = "tan",
-    POW = "pow"
+
+    DOT = "dot",
+    CROSS = "cross",
+    MAGNITUDE = "magnitude",
+
+    CALL = "call",
+    RET = "ret",
+
+    MIN = "min",
+    MAX = "max",
+    TOTAL = "total",
+    COUNT = "count"
 }
+
+// How does this instruction interact with vectors. Note that is NOT the vec2/vec3 data type, but the lists.
+enum BroadcastType {
+    ELEMENTS, // broadcast across elements of a vector, most common
+    NONE, // stuff like ret or call that cant broadcast
+    REDUCE // reduce a vector to a scalar, things like total, min, max etc
+}
+
+interface AllowedTypeInstance {
+    input_types: DataType[];
+    return_type: DataType | null; // if null, void/no return value
+}
+
+interface DasmInstructionSignature {
+    name: DasmInstrNames;
+    typeInteractions: AllowedTypeInstance[];
+    broadcast_type: BroadcastType;
+}
+
+const INSTRUCTION_REGISTRY: Map<DasmInstrNames, DasmInstructionSignature> = new Map([
+    // Binary arithmetic - same types only
+    [DasmInstrNames.ADD, {
+        name: DasmInstrNames.ADD,
+        typeInteractions: [
+            { input_types: [DataType.NUM, DataType.NUM], return_type: DataType.NUM },
+            { input_types: [DataType.VEC2, DataType.VEC2], return_type: DataType.VEC2 },
+            { input_types: [DataType.VEC3, DataType.VEC3], return_type: DataType.VEC3 }
+        ],
+        broadcast_type: BroadcastType.ELEMENTS
+    }],
+    [DasmInstrNames.SUB, {
+        name: DasmInstrNames.SUB,
+        typeInteractions: [
+            { input_types: [DataType.NUM, DataType.NUM], return_type: DataType.NUM },
+            { input_types: [DataType.VEC2, DataType.VEC2], return_type: DataType.VEC2 },
+            { input_types: [DataType.VEC3, DataType.VEC3], return_type: DataType.VEC3 }
+        ],
+        broadcast_type: BroadcastType.ELEMENTS
+    }],
+    [DasmInstrNames.DIV, {
+        name: DasmInstrNames.DIV,
+        typeInteractions: [
+            { input_types: [DataType.NUM, DataType.NUM], return_type: DataType.NUM },
+        ],
+        broadcast_type: BroadcastType.ELEMENTS
+    }],
+
+    // Multiplication - supports scalar broadcasting
+    [DasmInstrNames.MUL, {
+        name: DasmInstrNames.MUL,
+        typeInteractions: [
+            { input_types: [DataType.NUM, DataType.NUM], return_type: DataType.NUM },
+            // Scalar multiplication
+            { input_types: [DataType.NUM, DataType.VEC2], return_type: DataType.VEC2 },
+            { input_types: [DataType.NUM, DataType.VEC3], return_type: DataType.VEC3 }
+        ],
+        broadcast_type: BroadcastType.ELEMENTS
+    }],
+
+    // Power
+    [DasmInstrNames.POW, {
+        name: DasmInstrNames.POW,
+        typeInteractions: [
+            { input_types: [DataType.NUM, DataType.NUM], return_type: DataType.NUM }
+        ],
+        broadcast_type: BroadcastType.ELEMENTS
+    }],
+
+    // Unary operations
+    [DasmInstrNames.ABS, {
+        name: DasmInstrNames.ABS,
+        typeInteractions: [
+            { input_types: [DataType.NUM], return_type: DataType.NUM },
+        ],
+        broadcast_type: BroadcastType.ELEMENTS
+    }],
+    [DasmInstrNames.SQRT, {
+        name: DasmInstrNames.SQRT,
+        typeInteractions: [
+            { input_types: [DataType.NUM], return_type: DataType.NUM }
+        ],
+        broadcast_type: BroadcastType.ELEMENTS
+    }],
+
+    // Vector operations - return scalar
+    [DasmInstrNames.DOT, {
+        name: DasmInstrNames.DOT,
+        typeInteractions: [
+            { input_types: [DataType.VEC2, DataType.VEC2], return_type: DataType.NUM },
+            { input_types: [DataType.VEC3, DataType.VEC3], return_type: DataType.NUM }
+        ],
+        broadcast_type: BroadcastType.ELEMENTS
+    }],
+    [DasmInstrNames.MAGNITUDE, {
+        name: DasmInstrNames.MAGNITUDE,
+        typeInteractions: [
+            { input_types: [DataType.VEC2], return_type: DataType.NUM },
+            { input_types: [DataType.VEC3], return_type: DataType.NUM }
+        ],
+        broadcast_type: BroadcastType.ELEMENTS
+    }],
+
+    // Cross product - vec3 only
+    [DasmInstrNames.CROSS, {
+        name: DasmInstrNames.CROSS,
+        typeInteractions: [
+            { input_types: [DataType.VEC3, DataType.VEC3], return_type: DataType.VEC3 }
+        ],
+        broadcast_type: BroadcastType.ELEMENTS
+    }],
+
+    // Reduction operations
+    [DasmInstrNames.MIN, {
+        name: DasmInstrNames.MIN,
+        typeInteractions: [
+            { input_types: [DataType.NUM], return_type: DataType.NUM },
+        ],
+        broadcast_type: BroadcastType.REDUCE
+    }],
+    [DasmInstrNames.MAX, {
+        name: DasmInstrNames.MAX,
+        typeInteractions: [
+            { input_types: [DataType.NUM], return_type: DataType.NUM },
+        ],
+        broadcast_type: BroadcastType.REDUCE
+    }],
+    // total is the only one of these that can work on vectors why ?
+    [DasmInstrNames.TOTAL, {
+        name: DasmInstrNames.TOTAL,
+        typeInteractions: [
+            { input_types: [DataType.NUM], return_type: DataType.NUM },
+            { input_types: [DataType.VEC2], return_type: DataType.VEC2 },
+            { input_types: [DataType.VEC3], return_type: DataType.VEC3 }
+        ],
+        broadcast_type: BroadcastType.REDUCE
+    }],
+    [DasmInstrNames.COUNT, {
+        name: DasmInstrNames.COUNT,
+        typeInteractions: [
+            { input_types: [DataType.NUM], return_type: DataType.NUM },
+            { input_types: [DataType.VEC2], return_type: DataType.NUM },
+            { input_types: [DataType.VEC3], return_type: DataType.NUM }
+        ],
+        broadcast_type: BroadcastType.REDUCE
+    }],
+
+    // Control flow
+    [DasmInstrNames.CALL, {
+        name: DasmInstrNames.CALL,
+        typeInteractions: [
+            { input_types: [DataType.NUM], return_type: null }
+        ],
+        broadcast_type: BroadcastType.NONE
+    }],
+    [DasmInstrNames.RET, {
+        name: DasmInstrNames.RET,
+        typeInteractions: [
+            { input_types: [], return_type: null }
+        ],
+        broadcast_type: BroadcastType.NONE
+    }]
+]);
 
 // the dasm runtime and compiler
 class dasm_runtime {
@@ -196,7 +375,7 @@ class dasm_runtime {
                         if (!line.toLocaleLowerCase().startsWith("@functions")) {
                             this.compile_failed("Unknown section: '" + line + "' at line " + line_number + ", expected functions section");
                         } else {
-                            current_section = SectionType.FUCNTIONS;
+                            current_section = SectionType.FUNCTIONS;
                             if (this.compiler_options.showDataVals) this.print_data_vars();
                             continue;
                         }
@@ -213,8 +392,8 @@ class dasm_runtime {
         // Declarations should be at least <data type> <name> = <value>
         if (tokens.length < 4) this.compile_failed("Incomplete variable declaration: '" + line + "' at line " + line_num);
 
-        // any and vecn cannot be used for variables, only function parameters
-        if (tokens[0] == DataType.ANY || tokens[0] == DataType.VECN) this.compile_failed("Invalid data type for variable declaration: '" + tokens[0] + "' at line " + line_num);
+        // vars cannot be declared with template specifiers
+        if (tokens[0] == TemplateSpecifier.ANY || tokens[0] == TemplateSpecifier.VECN) this.compile_failed("Cannot declare data variable using a template specifier '" + line + "' at line " + line_num);
 
         // if the type ends with [], it's a list variable
         if (tokens[0].endsWith("[]")) {
