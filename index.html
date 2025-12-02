@@ -89,13 +89,13 @@ vec3[] points = [(-1, -1, 0), (1, -1, 0), (1, 1, 0), (-1, 1, 0)]
 
 @FUNCTIONS
 
-vecn unit(vecn v):
+fn vecn unit(vecn v):
 return v / abs(v)
 
-num psdf(vec3 point, vec3 origin, vec3 normal):
+fn num psdf(vec3 point, vec3 origin, vec3 normal):
 return dot(normal, point - origin)
 
-num pipe_frac(num fov):
+fn num pipe_frac(num fov):
 num z = 1 / tan(fov / 2)
 return z / (z + 1)
 

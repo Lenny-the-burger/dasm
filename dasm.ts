@@ -51,7 +51,7 @@ enum BinaryOp {
     DIV = "/"
 }
 
-enum DasmInstrNames {
+enum InstrName {
     // arithmetic
     ADD = "add",
     SUB = "sub",
@@ -81,49 +81,49 @@ enum BroadcastType {
     REDUCE // reduce a vector to a scalar, things like total, min, max etc
 }
 
-interface AllowedTypeInstance {
+interface TypeInteraction {
     input_types: DataType[];
     return_type: DataType | null; // if null, void/no return value
 }
 
-interface DasmInstructionSignature {
-    name: DasmInstrNames;
-    typeInteractions: AllowedTypeInstance[];
+interface InstructionSignature {
+    name: InstrName;
+    validTypeInteractions: TypeInteraction[];
     broadcast_type: BroadcastType;
 }
 
-const INSTRUCTION_REGISTRY: Map<DasmInstrNames, DasmInstructionSignature> = new Map([
+const INSTRUCTION_REGISTRY: Map<InstrName, InstructionSignature> = new Map([
     // Binary arithmetic - same types only
-    [DasmInstrNames.ADD, {
-        name: DasmInstrNames.ADD,
-        typeInteractions: [
+    [InstrName.ADD, {
+        name: InstrName.ADD,
+        validTypeInteractions: [
             { input_types: [DataType.NUM, DataType.NUM], return_type: DataType.NUM },
             { input_types: [DataType.VEC2, DataType.VEC2], return_type: DataType.VEC2 },
             { input_types: [DataType.VEC3, DataType.VEC3], return_type: DataType.VEC3 }
         ],
         broadcast_type: BroadcastType.ELEMENTS
     }],
-    [DasmInstrNames.SUB, {
-        name: DasmInstrNames.SUB,
-        typeInteractions: [
+    [InstrName.SUB, {
+        name: InstrName.SUB,
+        validTypeInteractions: [
             { input_types: [DataType.NUM, DataType.NUM], return_type: DataType.NUM },
             { input_types: [DataType.VEC2, DataType.VEC2], return_type: DataType.VEC2 },
             { input_types: [DataType.VEC3, DataType.VEC3], return_type: DataType.VEC3 }
         ],
         broadcast_type: BroadcastType.ELEMENTS
     }],
-    [DasmInstrNames.DIV, {
-        name: DasmInstrNames.DIV,
-        typeInteractions: [
+    [InstrName.DIV, {
+        name: InstrName.DIV,
+        validTypeInteractions: [
             { input_types: [DataType.NUM, DataType.NUM], return_type: DataType.NUM },
         ],
         broadcast_type: BroadcastType.ELEMENTS
     }],
 
     // Multiplication - supports scalar broadcasting
-    [DasmInstrNames.MUL, {
-        name: DasmInstrNames.MUL,
-        typeInteractions: [
+    [InstrName.MUL, {
+        name: InstrName.MUL,
+        validTypeInteractions: [
             { input_types: [DataType.NUM, DataType.NUM], return_type: DataType.NUM },
             // Scalar multiplication
             { input_types: [DataType.NUM, DataType.VEC2], return_type: DataType.VEC2 },
@@ -133,42 +133,42 @@ const INSTRUCTION_REGISTRY: Map<DasmInstrNames, DasmInstructionSignature> = new 
     }],
 
     // Power
-    [DasmInstrNames.POW, {
-        name: DasmInstrNames.POW,
-        typeInteractions: [
+    [InstrName.POW, {
+        name: InstrName.POW,
+        validTypeInteractions: [
             { input_types: [DataType.NUM, DataType.NUM], return_type: DataType.NUM }
         ],
         broadcast_type: BroadcastType.ELEMENTS
     }],
 
     // Unary operations
-    [DasmInstrNames.ABS, {
-        name: DasmInstrNames.ABS,
-        typeInteractions: [
+    [InstrName.ABS, {
+        name: InstrName.ABS,
+        validTypeInteractions: [
             { input_types: [DataType.NUM], return_type: DataType.NUM },
         ],
         broadcast_type: BroadcastType.ELEMENTS
     }],
-    [DasmInstrNames.SQRT, {
-        name: DasmInstrNames.SQRT,
-        typeInteractions: [
+    [InstrName.SQRT, {
+        name: InstrName.SQRT,
+        validTypeInteractions: [
             { input_types: [DataType.NUM], return_type: DataType.NUM }
         ],
         broadcast_type: BroadcastType.ELEMENTS
     }],
 
     // Vector operations - return scalar
-    [DasmInstrNames.DOT, {
-        name: DasmInstrNames.DOT,
-        typeInteractions: [
+    [InstrName.DOT, {
+        name: InstrName.DOT,
+        validTypeInteractions: [
             { input_types: [DataType.VEC2, DataType.VEC2], return_type: DataType.NUM },
             { input_types: [DataType.VEC3, DataType.VEC3], return_type: DataType.NUM }
         ],
         broadcast_type: BroadcastType.ELEMENTS
     }],
-    [DasmInstrNames.MAGNITUDE, {
-        name: DasmInstrNames.MAGNITUDE,
-        typeInteractions: [
+    [InstrName.MAGNITUDE, {
+        name: InstrName.MAGNITUDE,
+        validTypeInteractions: [
             { input_types: [DataType.VEC2], return_type: DataType.NUM },
             { input_types: [DataType.VEC3], return_type: DataType.NUM }
         ],
@@ -176,42 +176,42 @@ const INSTRUCTION_REGISTRY: Map<DasmInstrNames, DasmInstructionSignature> = new 
     }],
 
     // Cross product - vec3 only
-    [DasmInstrNames.CROSS, {
-        name: DasmInstrNames.CROSS,
-        typeInteractions: [
+    [InstrName.CROSS, {
+        name: InstrName.CROSS,
+        validTypeInteractions: [
             { input_types: [DataType.VEC3, DataType.VEC3], return_type: DataType.VEC3 }
         ],
         broadcast_type: BroadcastType.ELEMENTS
     }],
 
     // Reduction operations
-    [DasmInstrNames.MIN, {
-        name: DasmInstrNames.MIN,
-        typeInteractions: [
+    [InstrName.MIN, {
+        name: InstrName.MIN,
+        validTypeInteractions: [
             { input_types: [DataType.NUM], return_type: DataType.NUM },
         ],
         broadcast_type: BroadcastType.REDUCE
     }],
-    [DasmInstrNames.MAX, {
-        name: DasmInstrNames.MAX,
-        typeInteractions: [
+    [InstrName.MAX, {
+        name: InstrName.MAX,
+        validTypeInteractions: [
             { input_types: [DataType.NUM], return_type: DataType.NUM },
         ],
         broadcast_type: BroadcastType.REDUCE
     }],
     // total is the only one of these that can work on vectors why ?
-    [DasmInstrNames.TOTAL, {
-        name: DasmInstrNames.TOTAL,
-        typeInteractions: [
+    [InstrName.TOTAL, {
+        name: InstrName.TOTAL,
+        validTypeInteractions: [
             { input_types: [DataType.NUM], return_type: DataType.NUM },
             { input_types: [DataType.VEC2], return_type: DataType.VEC2 },
             { input_types: [DataType.VEC3], return_type: DataType.VEC3 }
         ],
         broadcast_type: BroadcastType.REDUCE
     }],
-    [DasmInstrNames.COUNT, {
-        name: DasmInstrNames.COUNT,
-        typeInteractions: [
+    [InstrName.COUNT, {
+        name: InstrName.COUNT,
+        validTypeInteractions: [
             { input_types: [DataType.NUM], return_type: DataType.NUM },
             { input_types: [DataType.VEC2], return_type: DataType.NUM },
             { input_types: [DataType.VEC3], return_type: DataType.NUM }
@@ -220,21 +220,86 @@ const INSTRUCTION_REGISTRY: Map<DasmInstrNames, DasmInstructionSignature> = new 
     }],
 
     // Control flow
-    [DasmInstrNames.CALL, {
-        name: DasmInstrNames.CALL,
-        typeInteractions: [
+    [InstrName.CALL, {
+        name: InstrName.CALL,
+        validTypeInteractions: [
             { input_types: [DataType.NUM], return_type: null }
         ],
         broadcast_type: BroadcastType.NONE
     }],
-    [DasmInstrNames.RET, {
-        name: DasmInstrNames.RET,
-        typeInteractions: [
+    [InstrName.RET, {
+        name: InstrName.RET,
+        validTypeInteractions: [
             { input_types: [], return_type: null }
         ],
         broadcast_type: BroadcastType.NONE
     }]
 ]);
+
+enum VariantShape {
+    SCALAR,
+    VECTOR
+}
+
+enum OperandType {
+    LITERAL,
+    VARIABLE,
+    FUCNTION_NAME
+}
+
+interface Operand {
+    type: OperandType;
+}
+
+interface LiteralSingleOperand<T> extends Operand {
+    data_type: DataType;
+    value: singletDataVar<T>;
+}
+
+interface LiteralListOperand<T> extends Operand {
+    data_type: DataType;
+    values: dataListVar<T>;
+}
+
+interface VariableOperand extends Operand {
+    name: string;
+    data_type: DataType;
+}
+
+interface FunctionNameOperand extends Operand {
+    name: string;
+}
+
+interface InstructionInstance {
+    name: InstrName;
+
+    variant_shape: VariantShape;
+    variant_types: TypeInteraction;
+
+    operands: Operand[];
+
+    dest_var: VariableOperand | null;
+}
+
+interface DasmFunction {
+    name: string;
+    return_type: DataType;
+    arg_types: Map<string, DataType>;
+    local_vars: Map<string, DataType>;
+
+    instructions: InstructionInstance[];
+}
+
+function sliceParens(str: string): string | null {
+    const start = str.indexOf("(");
+    const end = str.lastIndexOf(")");
+
+    if (start === -1 || end === -1 || start >= end) {
+        return null;
+    }
+
+    return str.substring(start + 1, end);
+}
 
 // the dasm runtime and compiler
 class dasm_runtime {
@@ -285,20 +350,26 @@ class dasm_runtime {
         return this.stdout;
     }
 
+    private escapeHtml(text: string): string {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML.replace(/&lt;br&gt;/g, '<br>');
+    }
+
     cerr(msg: string) {
-        this.stdout += "<span class='con-err'>" + msg + "</span><br>";
+        this.stdout += "<span class='con-err'>" + this.escapeHtml(msg) + "</span><br>";
     }
 
     cwarn(msg: string) {
-        this.stdout += "<span class='con-warn'>" + msg + "</span><br>";
+        this.stdout += "<span class='con-warn'>" + this.escapeHtml(msg) + "</span><br>";
     }
 
     cinfo(msg: string) {
-        this.stdout += "<span class='con-info'>" + msg + "</span><br>";
+        this.stdout += "<span class='con-info'>" + this.escapeHtml(msg) + "</span><br>";
     }
 
     cout(msg: string) {
-        this.stdout += msg;
+        this.stdout += this.escapeHtml(msg);
     }
 
     compile_failed(err: string): never {
@@ -366,6 +437,8 @@ class dasm_runtime {
                         continue;
                     }
 
+                    break;
+
                 case SectionType.DATA:
                     // Data should only contain variable declarations
                     if (!line.startsWith("@")) {
@@ -381,10 +454,34 @@ class dasm_runtime {
                         }
                     }
 
+                    break;
+
+                case SectionType.FUNCTIONS:
+                    // function declarations follow the format:
+                    // fn <return type> <function name>(<arg type> <arg name>, ...) {
+                    if (!line.startsWith("fn")) {
+                        this.compile_failed("Expected function declaration at line " + line_number + ", got: '" + line + "'");
+                    } else {
+                        this.parseFunctionDecl(line, line_number);
+                    }
+
+                    break;
+
             }
         }
 
         this.cinfo("Finished compiling in " + (new Date().getTime() - this.latest_compile_start_time.getTime()) + " ms");
+    }
+
+    parseFunctionDecl(line: string, line_num: number) {
+        const tokens = line.split(" ");
+
+        // Declarations should be at least fn <return type> <function name>(<args>?)
+        if (tokens.length < 3) this.compile_failed("Incomplete function declaration: '" + line + "' at line " + line_num);
+
+        const return_type = tokens[1];
+        // merge all tokens after fn and the return type
+        const name_and_args = tokens.slice(2).join(" ");
     }
 
     parseDataVar(line: string, line_num: number) {
